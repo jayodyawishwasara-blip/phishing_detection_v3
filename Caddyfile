@@ -1,0 +1,48 @@
+# Phishing Defense Platform - Caddy Configuration
+
+194.233.84.223 {
+    # API endpoints
+    handle /api/* {
+        reverse_proxy localhost:5000 {
+            transport http {
+                dial_timeout 10s
+                response_header_timeout 120s
+            }
+        }
+    }
+
+    # Screenshots
+    handle /screenshots/* {
+        root * /opt/phishing-defense/phishing-data
+        file_server
+    }
+
+    # Frontend
+    handle {
+        root * /opt/phishing-defense/frontend/build
+        try_files {path} /index.html
+        file_server
+    }
+
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'"
+        -Server
+    }
+
+    # Compression
+    encode gzip
+
+    # Logging
+    log {
+        output file /var/log/caddy/phishing-defense.log {
+            roll_size 100mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+    }
+}
